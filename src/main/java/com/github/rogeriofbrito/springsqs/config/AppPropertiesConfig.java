@@ -16,4 +16,7 @@ public class AppPropertiesConfig {
 
     @Value("${app.queue.product.url}")
     private String productQueueUrl;
+
+    @Value("${app.dead-letter-queue.product.url}")
+    private String productDeadLetterQueueUrl;
 }
