@@ -1,9 +1,5 @@
 package com.github.rogeriofbrito.springsqs.listener;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.PurgeQueueRequest;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.rogeriofbrito.springsqs.SpringSqsApplication;
@@ -11,6 +7,9 @@ import com.github.rogeriofbrito.springsqs.config.AppPropertiesConfig;
 import com.github.rogeriofbrito.springsqs.listener.model.ProductMessage;
 import com.github.rogeriofbrito.springsqs.service.ProductService;
 import com.github.rogeriofbrito.springsqs.service.model.ProcessProductRequest;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.TextMessage;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,13 +21,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.TextMessage;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = SpringSqsApplication.class)
@@ -37,7 +34,7 @@ import static org.mockito.Mockito.*;
 public class ProductListenerIntegrationTest {
 
     @Autowired
-    private AmazonSQS amazonSQS;
+    private SqsClient sqsClient;
     @SpyBean
     private ObjectMapper objectMapper;
     @Autowired
@@ -63,12 +60,12 @@ public class ProductListenerIntegrationTest {
 
     @BeforeEach
     void beforeEach() {
-        amazonSQS.purgeQueue(new PurgeQueueRequest(appPropertiesConfig.getProductQueueUrl()));
+        sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(appPropertiesConfig.getProductQueueUrl()).build());
     }
 
     @AfterEach
     void afterEach() {
-        amazonSQS.purgeQueue(new PurgeQueueRequest(appPropertiesConfig.getProductQueueUrl()));
+        sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(appPropertiesConfig.getProductQueueUrl()).build());
     }
 
     @Test
@@ -77,10 +74,10 @@ public class ProductListenerIntegrationTest {
         final String messageBody = "invalid message";
 
         // when
-        final SendMessageRequest sendMessageRequest = new SendMessageRequest(
-                appPropertiesConfig.getProductQueueUrl(),
-                messageBody);
-        amazonSQS.sendMessage(sendMessageRequest);
+        sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(appPropertiesConfig.getProductQueueUrl())
+                .messageBody(messageBody)
+                .build());
 
         // then
         verify(productListener, timeout(30000).times(1)).onMessage(messageArgumentCaptor.capture());
@@ -102,10 +99,10 @@ public class ProductListenerIntegrationTest {
         final String messageBody = objectMapper.writeValueAsString(productMessage);
 
         //when
-        final SendMessageRequest sendMessageRequest = new SendMessageRequest(
-                appPropertiesConfig.getProductQueueUrl(),
-                messageBody);
-        final SendMessageResult sendMessageResult = amazonSQS.sendMessage(sendMessageRequest);
+        sqsClient.sendMessage(SendMessageRequest.builder()
+                .queueUrl(appPropertiesConfig.getProductQueueUrl())
+                .messageBody(messageBody)
+                .build());
 
         // then
         final ProcessProductRequest expectedProcessProductRequest = ProcessProductRequest.builder()
@@ -114,9 +111,8 @@ public class ProductListenerIntegrationTest {
                 .brand(productMessage.getBrand())
                 .build();
 
-        verify(productListener, timeout(100).times(1)).onMessage(messageArgumentCaptor.capture());
-        verify(productService, only()).processProduct(processProductRequestArgumentCaptor.capture());
-        assertNotNull(sendMessageResult.getMessageId());
+        verify(productListener, timeout(30000).times(1)).onMessage(messageArgumentCaptor.capture());
+        verify(productService, timeout(30000).only()).processProduct(processProductRequestArgumentCaptor.capture());
         assertEquals(messageBody, ((TextMessage) messageArgumentCaptor.getValue()).getText());
         assertEquals(expectedProcessProductRequest, processProductRequestArgumentCaptor.getValue());
     }

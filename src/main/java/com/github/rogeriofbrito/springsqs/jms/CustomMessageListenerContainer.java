@@ -1,8 +1,7 @@
 package com.github.rogeriofbrito.springsqs.jms;
 
+import jakarta.jms.Session;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
-
-import javax.jms.Session;
 
 public class CustomMessageListenerContainer extends DefaultMessageListenerContainer {
 

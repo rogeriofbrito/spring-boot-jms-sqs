@@ -1,10 +1,12 @@
 package com.github.rogeriofbrito.springsqs.config;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sqs.SqsClient;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Configuration
 public class AwsLocalConfig {
@@ -16,14 +18,10 @@ public class AwsLocalConfig {
     }
 
     @Bean
-    public AmazonSQS amazonSQS() {
-        return AmazonSQSClientBuilder.standard()
-                .withEndpointConfiguration(getEndpointConfiguration())
+    public SqsClient sqsClient() throws URISyntaxException {
+        return SqsClient.builder()
+                .region(Region.of(appPropertiesConfig.getAwsRegion()))
+                .endpointOverride(new URI(appPropertiesConfig.getAwsServiceEndpoint()))
                 .build();
-    }
-
-    private AwsClientBuilder.EndpointConfiguration getEndpointConfiguration() {
-        return new AwsClientBuilder.EndpointConfiguration(appPropertiesConfig.getAwsServiceEndpoint(),
-                appPropertiesConfig.getAwsRegion());
     }
 }

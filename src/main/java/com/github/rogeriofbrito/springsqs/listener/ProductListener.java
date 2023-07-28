@@ -6,14 +6,13 @@ import com.github.rogeriofbrito.springsqs.listener.model.ProductMessage;
 import com.github.rogeriofbrito.springsqs.service.ProductService;
 import com.github.rogeriofbrito.springsqs.service.model.ProcessProductRequest;
 import com.github.rogeriofbrito.springsqs.service.model.ProcessProductResponse;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
+import jakarta.jms.TextMessage;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
-
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.TextMessage;
 
 @Component
 @Log4j2

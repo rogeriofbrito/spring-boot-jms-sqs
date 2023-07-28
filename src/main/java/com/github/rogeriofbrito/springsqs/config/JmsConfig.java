@@ -2,24 +2,23 @@ package com.github.rogeriofbrito.springsqs.config;
 
 import com.amazon.sqs.javamessaging.ProviderConfiguration;
 import com.amazon.sqs.javamessaging.SQSConnectionFactory;
-import com.amazonaws.services.sqs.AmazonSQS;
 import com.github.rogeriofbrito.springsqs.jms.CustomJmsListenerContainerFactory;
+import jakarta.jms.Session;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.support.destination.DynamicDestinationResolver;
-
-import javax.jms.Session;
+import software.amazon.awssdk.services.sqs.SqsClient;
 
 @Configuration
 @EnableJms
 public class JmsConfig {
 
-    private final AmazonSQS amazonSQS;
+    private final SqsClient sqsClient;
 
-    public JmsConfig(AmazonSQS amazonSQS) {
-        this.amazonSQS = amazonSQS;
+    public JmsConfig(SqsClient sqsClient) {
+        this.sqsClient = sqsClient;
     }
 
     @Bean
@@ -36,7 +35,7 @@ public class JmsConfig {
     private SQSConnectionFactory getSQSConnectionFactory() {
         return new SQSConnectionFactory(
                 getProviderConfiguration(),
-                amazonSQS);
+                sqsClient);
     }
 
     private ProviderConfiguration getProviderConfiguration() {
