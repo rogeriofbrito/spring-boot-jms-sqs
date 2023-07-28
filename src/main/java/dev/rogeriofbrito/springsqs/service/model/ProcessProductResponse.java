@@ -1,4 +1,4 @@
-package com.github.rogeriofbrito.springsqs.service.model;
+package dev.rogeriofbrito.springsqs.service.model;
 
 import lombok.Builder;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.github.rogeriofbrito.springsqs;
+package dev.rogeriofbrito.springsqs;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

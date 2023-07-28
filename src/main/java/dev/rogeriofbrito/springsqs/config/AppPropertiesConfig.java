@@ -1,4 +1,4 @@
-package com.github.rogeriofbrito.springsqs.config;
+package dev.rogeriofbrito.springsqs.config;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;

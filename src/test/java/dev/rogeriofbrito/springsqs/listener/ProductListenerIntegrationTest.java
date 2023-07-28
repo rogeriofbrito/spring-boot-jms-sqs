@@ -1,12 +1,12 @@
-package com.github.rogeriofbrito.springsqs.listener;
+package dev.rogeriofbrito.springsqs.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.rogeriofbrito.springsqs.SpringSqsApplication;
-import com.github.rogeriofbrito.springsqs.config.AppPropertiesConfig;
-import com.github.rogeriofbrito.springsqs.listener.model.ProductMessage;
-import com.github.rogeriofbrito.springsqs.service.ProductService;
-import com.github.rogeriofbrito.springsqs.service.model.ProcessProductRequest;
+import dev.rogeriofbrito.springsqs.SpringSqsApplication;
+import dev.rogeriofbrito.springsqs.config.AppPropertiesConfig;
+import dev.rogeriofbrito.springsqs.listener.model.ProductMessage;
+import dev.rogeriofbrito.springsqs.service.ProductService;
+import dev.rogeriofbrito.springsqs.service.model.ProcessProductRequest;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.TextMessage;

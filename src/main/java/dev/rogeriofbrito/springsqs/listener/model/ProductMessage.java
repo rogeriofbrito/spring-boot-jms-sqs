@@ -1,4 +1,4 @@
-package com.github.rogeriofbrito.springsqs.listener.model;
+package dev.rogeriofbrito.springsqs.listener.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

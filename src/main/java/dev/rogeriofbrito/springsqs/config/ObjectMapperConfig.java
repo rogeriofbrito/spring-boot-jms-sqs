@@ -1,4 +1,4 @@
-package com.github.rogeriofbrito.springsqs.config;
+package dev.rogeriofbrito.springsqs.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;

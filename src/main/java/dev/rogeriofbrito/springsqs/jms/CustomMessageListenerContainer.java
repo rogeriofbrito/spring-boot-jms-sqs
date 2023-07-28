@@ -1,4 +1,4 @@
-package com.github.rogeriofbrito.springsqs.jms;
+package dev.rogeriofbrito.springsqs.jms;
 
 import jakarta.jms.Session;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;

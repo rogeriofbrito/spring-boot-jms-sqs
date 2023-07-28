@@ -1,7 +1,7 @@
-package com.github.rogeriofbrito.springsqs.service;
+package dev.rogeriofbrito.springsqs.service;
 
-import com.github.rogeriofbrito.springsqs.service.model.ProcessProductRequest;
-import com.github.rogeriofbrito.springsqs.service.model.ProcessProductResponse;
+import dev.rogeriofbrito.springsqs.service.model.ProcessProductRequest;
+import dev.rogeriofbrito.springsqs.service.model.ProcessProductResponse;
 import org.springframework.stereotype.Service;
 
 @Service
