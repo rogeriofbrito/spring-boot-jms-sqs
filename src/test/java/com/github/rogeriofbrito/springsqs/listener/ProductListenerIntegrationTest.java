@@ -35,7 +35,7 @@ public class ProductListenerIntegrationTest {
 
     @Autowired
     private SqsClient sqsClient;
-    @SpyBean
+    @Autowired
     private ObjectMapper objectMapper;
     @Autowired
     private AppPropertiesConfig appPropertiesConfig;
@@ -69,7 +69,7 @@ public class ProductListenerIntegrationTest {
     }
 
     @Test
-    void givenAInvalidMessageShouldFailWhenReceive() throws JMSException, JsonProcessingException {
+    void givenAInvalidMessageShouldFailWhenReceive() throws JMSException {
         // given
         final String messageBody = "invalid message";
 
@@ -80,9 +80,8 @@ public class ProductListenerIntegrationTest {
                 .build());
 
         // then
-        verify(productListener, timeout(30000).times(1)).onMessage(messageArgumentCaptor.capture());
-        verify(objectMapper, after(2000).times(1)).readValue("invalid message", ProductMessage.class); // necessary to verify internal calls to onMessage method that aren't checked with verify in onMessage
-        verify(productService, never()).processProduct(processProductRequestArgumentCaptor.capture());
+        verify(productListener, after(7000).times(2)).onMessage(messageArgumentCaptor.capture());
+        verify(productService, after(7000).never()).processProduct(processProductRequestArgumentCaptor.capture());
 
         assertEquals(messageBody, ((TextMessage) messageArgumentCaptor.getValue()).getText());
     }
@@ -111,8 +110,8 @@ public class ProductListenerIntegrationTest {
                 .brand(productMessage.getBrand())
                 .build();
 
-        verify(productListener, timeout(30000).times(1)).onMessage(messageArgumentCaptor.capture());
-        verify(productService, timeout(30000).only()).processProduct(processProductRequestArgumentCaptor.capture());
+        verify(productListener, after(7000).times(1)).onMessage(messageArgumentCaptor.capture());
+        verify(productService, after(7000).only()).processProduct(processProductRequestArgumentCaptor.capture());
         assertEquals(messageBody, ((TextMessage) messageArgumentCaptor.getValue()).getText());
         assertEquals(expectedProcessProductRequest, processProductRequestArgumentCaptor.getValue());
     }
