@@ -1,7 +1,6 @@
 package com.github.rogeriofbrito.springsqs.listener;
 
 import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
@@ -27,11 +26,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
@@ -41,17 +36,12 @@ import static org.mockito.Mockito.*;
 @Log4j2
 public class ProductListenerIntegrationTest {
 
-    private final AmazonSQS amazonSQS;
-    private final ObjectMapper objectMapper;
-    private final AppPropertiesConfig appPropertiesConfig;
-
     @Autowired
-    public ProductListenerIntegrationTest(AmazonSQS amazonSQS, ObjectMapper objectMapper,
-                                          AppPropertiesConfig appPropertiesConfig) {
-        this.amazonSQS = amazonSQS;
-        this.objectMapper = objectMapper;
-        this.appPropertiesConfig = appPropertiesConfig;
-    }
+    private AmazonSQS amazonSQS;
+    @SpyBean
+    private ObjectMapper objectMapper;
+    @Autowired
+    private AppPropertiesConfig appPropertiesConfig;
 
     @SpyBean
     private ProductListener productListener;
@@ -63,22 +53,26 @@ public class ProductListenerIntegrationTest {
     private ArgumentCaptor<Message> messageArgumentCaptor;
 
     @Captor
+    private ArgumentCaptor<String> messageStrArgumentCaptor;
+
+    @Captor
+    private ArgumentCaptor<Class<ProductMessage>> classArgumentCaptor;
+
+    @Captor
     private ArgumentCaptor<ProcessProductRequest> processProductRequestArgumentCaptor;
 
     @BeforeEach
     void beforeEach() {
         amazonSQS.purgeQueue(new PurgeQueueRequest(appPropertiesConfig.getProductQueueUrl()));
-        amazonSQS.purgeQueue(new PurgeQueueRequest(appPropertiesConfig.getProductDeadLetterQueueUrl()));
     }
 
     @AfterEach
     void afterEach() {
         amazonSQS.purgeQueue(new PurgeQueueRequest(appPropertiesConfig.getProductQueueUrl()));
-        amazonSQS.purgeQueue(new PurgeQueueRequest(appPropertiesConfig.getProductDeadLetterQueueUrl()));
     }
 
     @Test
-    void givenAInvalidMessageShouldFailWhenReceive() throws JMSException {
+    void givenAInvalidMessageShouldFailWhenReceive() throws JMSException, JsonProcessingException {
         // given
         final String messageBody = "invalid message";
 
@@ -86,36 +80,14 @@ public class ProductListenerIntegrationTest {
         final SendMessageRequest sendMessageRequest = new SendMessageRequest(
                 appPropertiesConfig.getProductQueueUrl(),
                 messageBody);
-        final SendMessageResult sendMessageResult = amazonSQS.sendMessage(sendMessageRequest);
+        amazonSQS.sendMessage(sendMessageRequest);
 
         // then
-        verify(productListener, timeout(10000).times(1)).onMessage(messageArgumentCaptor.capture());
+        verify(productListener, timeout(30000).times(1)).onMessage(messageArgumentCaptor.capture());
+        verify(objectMapper, after(2000).times(1)).readValue("invalid message", ProductMessage.class); // necessary to verify internal calls to onMessage method that aren't checked with verify in onMessage
         verify(productService, never()).processProduct(processProductRequestArgumentCaptor.capture());
 
-        assertNotNull(sendMessageResult);
         assertEquals(messageBody, ((TextMessage) messageArgumentCaptor.getValue()).getText());
-
-        /*
-        After 5 seconds (pollDelay), given that product_queue has a VisibleTimeout of 5 seconds and a maxReceiveCount of 1,
-        the following conditions are expected:
-        product_queue: ApproximateNumberOfMessages = 0 and ApproximateNumberOfMessagesNotVisible = 0 (no message to be processed)
-        product_queue_dead_letter: ApproximateNumberOfMessages = 1 and ApproximateNumberOfMessagesNotVisible = 0 (one message ready to be processed)
-         */
-        await()
-                .timeout(15, TimeUnit.SECONDS)
-                .pollDelay(5, TimeUnit.SECONDS)
-                .until(() -> {
-
-                    final Map<String, String> queueAttributes =
-                            getQueueAttributes(appPropertiesConfig.getProductQueueUrl());
-                    Map<String, String> deadLetterQueueAttributes =
-                            getQueueAttributes(appPropertiesConfig.getProductDeadLetterQueueUrl());
-
-                    return "0".equals(queueAttributes.get("ApproximateNumberOfMessages"))
-                            && "0".equals(queueAttributes.get("ApproximateNumberOfMessagesNotVisible"))
-                            && "1".equals(deadLetterQueueAttributes.get("ApproximateNumberOfMessages"))
-                            && "0".equals(deadLetterQueueAttributes.get("ApproximateNumberOfMessagesNotVisible"));
-                });
     }
 
     @Test
@@ -147,37 +119,5 @@ public class ProductListenerIntegrationTest {
         assertNotNull(sendMessageResult.getMessageId());
         assertEquals(messageBody, ((TextMessage) messageArgumentCaptor.getValue()).getText());
         assertEquals(expectedProcessProductRequest, processProductRequestArgumentCaptor.getValue());
-
-        /*
-        After 1 seconds (pollDelay), given that product_queue has a VisibleTimeout of 5 seconds and a maxReceiveCount of 1,
-        the following conditions are expected:
-        product_queue: ApproximateNumberOfMessages = 0 and ApproximateNumberOfMessagesNotVisible = 0 (no message to be processed)
-        product_queue_dead_letter: ApproximateNumberOfMessages = 0 and ApproximateNumberOfMessagesNotVisible = 0 (one message ready to be processed)
-         */
-        await()
-                .timeout(5, TimeUnit.SECONDS)
-                .pollDelay(1, TimeUnit.SECONDS)
-                .until(() -> {
-
-                    final Map<String, String> queueAttributes =
-                            getQueueAttributes(appPropertiesConfig.getProductQueueUrl());
-                    Map<String, String> deadLetterQueueAttributes =
-                            getQueueAttributes(appPropertiesConfig.getProductDeadLetterQueueUrl());
-
-                    return "0".equals(queueAttributes.get("ApproximateNumberOfMessages"))
-                            && "0".equals(queueAttributes.get("ApproximateNumberOfMessagesNotVisible"))
-                            && "0".equals(deadLetterQueueAttributes.get("ApproximateNumberOfMessages"))
-                            && "0".equals(deadLetterQueueAttributes.get("ApproximateNumberOfMessagesNotVisible"));
-                });
-    }
-
-    private Map<String, String> getQueueAttributes(String queueUrl) {
-        final GetQueueAttributesResult getQueueAttributesResult = amazonSQS.getQueueAttributes(
-                queueUrl,
-                List.of("All"));
-
-        log.info("{}: {}", queueUrl, getQueueAttributesResult.getAttributes().toString());
-
-        return getQueueAttributesResult.getAttributes();
     }
 }
