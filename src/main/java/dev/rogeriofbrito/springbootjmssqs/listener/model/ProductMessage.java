@@ -1,4 +1,4 @@
-package dev.rogeriofbrito.springsqs.listener.model;
+package dev.rogeriofbrito.springbootjmssqs.listener.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package dev.rogeriofbrito.springsqs;
+package dev.rogeriofbrito.springbootjmssqs;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

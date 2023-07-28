@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>dev.rogeriofbrito</groupId>
-	<artifactId>spring-sqs</artifactId>
+	<artifactId>spring-boot-jms-sqs</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>spring-sqs</name>
 	<description>Demo project for Spring Boot</description>

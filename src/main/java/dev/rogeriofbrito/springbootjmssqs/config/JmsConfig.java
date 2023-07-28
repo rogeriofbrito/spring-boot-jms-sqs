@@ -1,8 +1,8 @@
-package dev.rogeriofbrito.springsqs.config;
+package dev.rogeriofbrito.springbootjmssqs.config;
 
 import com.amazon.sqs.javamessaging.ProviderConfiguration;
 import com.amazon.sqs.javamessaging.SQSConnectionFactory;
-import dev.rogeriofbrito.springsqs.jms.CustomJmsListenerContainerFactory;
+import dev.rogeriofbrito.springbootjmssqs.jms.CustomJmsListenerContainerFactory;
 import jakarta.jms.Session;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

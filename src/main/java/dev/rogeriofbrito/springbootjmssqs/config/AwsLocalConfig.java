@@ -1,4 +1,4 @@
-package dev.rogeriofbrito.springsqs.config;
+package dev.rogeriofbrito.springbootjmssqs.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package dev.rogeriofbrito.springsqs.jms;
+package dev.rogeriofbrito.springbootjmssqs.jms;
 
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
